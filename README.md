@@ -54,6 +54,7 @@ This part is a random account of what happened since I received the task until I
 
 ## Steps
 1. I started by thinking about building the core service (screen-shot-service), which is the screenshot generator.
+
 2. After searching for a screenshot service built in Golang, I found [gowitness](https://en.wikipedia.org/wiki/Apache_Kafka), an awesome library that executes the command `google-chrome` to generate screenshots of any URL.
 example to use:
 
@@ -61,14 +62,23 @@ example to use:
 docker run --rm -it -v $(pwd)/screenshots:/screenshots leonjza/gowitness:latest single --url=https://www.google.com
 ```
 I decided to try it and after extracting the `chrome` package from `gowitness`, it worked fine, so I continued building the other packages: `main`, `config`, `logger`, and `storage`.
+
 3. The screen-shot-service had to handle up to 1,000,000 screenshots per day, meaning around 1000 images per minute. To accommodate this, I designed the storage strategy to save the images in the file system, with a new directory created each minute. The images are tracked by when they were generated and the URL hash.
+
 4. I used the `md5 algorithm` to ensure that the URL length wouldn't affect the length of the generated image names.
+
 5. Next, I worked on the `receiver` service and continued building the Kafka service, adding Kafka clients to both the screen-shot-service and the receiver.
+
 6. At first, everything worked fine, but with a lot of requests, the `chrome` package in the screen-shot-service couldn't handle the requests. The issue was that Google Chrome couldn't generate more than one screenshot at a time.
+
 7. I then decided to revisit my old tool, `scrapy-splash`, to solve this issue. You can find more information [here](https://github.com/scrapy-plugins/scrapy-splash). I used `scrapy-splash` 2 years ago in my project (Elwizara). `scrapy-splash` is built in Python, but you can call the service through the network. They use `Lua` as a scripting language to render the result, which worked well for me except for a minor issue I faced ([more information here](https://github.com/scrapy-plugins/scrapy-splash/issues/186)).
+
 8. The design pattern of the screen-shot-service made it easy to accept multiple generators. `Scrapy-splash` worked much better than Google Chrome, especially in concurrency mode.
+
 9. After this, I started implementing `screen-shot-api` and `screen-shot-db` to provide a data system interface for Shutter.
+
 10. `Screen-shot-api` was built using a `3-Tier Architecture` (more information [here](https://en.wikipedia.org/wiki/Multitier_architecture)).
+
 11. I used my code generator, [modelgen](https://github.com/tarekbadrshalaan/modelgen), to generate `screen-shot-api`. `Modelgen` is compatible with (mysql, postgres, mssql, sqlite, oracle) and provides a full API implementation that works with the database.
 
 ## Summary
