@@ -1,0 +1,18 @@
+{
+    "RESOLUTION"                : "1440,900",
+    "CHROME_TIMEOUT"            : 90,
+    "CHROME_TIME_BUDGET"        : 2,
+    "SCRAPY_SPLASH_HOST"        : "localhost:8050",
+    "PARALLER_EXECUTION_COUNT"  : 8,
+    "RETRY_COUNT"               : 3,
+
+    "STORAGE_PATH"              : "./data",
+
+    "KAFKA_CLUSTER_VERSION"     : "2.1.1",
+    "KAFKA_BROKERS"             : "http://kafka:9092",
+    "KAFKA_OLDEST_OFFSET"       : true,
+    "SCREEN_SHOT_KAFKA_GROUP"   : "SCREEN-SHOT-GROUP",
+    
+    "RAW_URL_KAFKA_TOPIC"       : "raw_url",
+    "RESULT_SERVICE_URL"          : "http://localhost:7070",
+}

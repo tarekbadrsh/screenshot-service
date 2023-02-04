@@ -1,0 +1,107 @@
+#########################################
+#                receiver-api           #
+#########################################
+
+GET http://localhost:6060/ready
+Content-Type: Application/json
+
+
+### 
+POST http://localhost:6060/json
+Content-Type: Application/json
+
+{
+  "url":"https://www.google.com/"
+}
+
+### wrong Message
+POST http://localhost:6060/json
+Content-Type: Application/json
+
+{
+  "url":"error"
+}
+
+### wrong Message
+POST http://localhost:6060/json
+Content-Type: Application/json
+
+{
+  "error":"error"
+}
+
+###
+POST http://localhost:6060/json
+Content-Type: Application/json
+
+[
+  {
+    "url":"https://www.google.com/"
+  },
+  {
+    "url":"https://www.twitter.com/"
+  },
+  {
+    "url":"https://www.youtube.com/"
+  },
+  {
+    "url":"https://www.github.com/"
+  },
+  {
+    "url":"https://www.bitbucket.org/"
+  },
+  {
+    "url":"https://www.chess.com/"
+  },
+  {
+    "url":"https://www.microsoft.com/"
+  },
+  {
+    "url":"https://www.samsung.com/"
+  },
+  {
+    "url":"https://www.apple.com/"
+  },
+  {
+    "url":"error"
+  }
+]
+
+
+#########################################
+#                screen-shot-api        #
+#########################################
+
+### Get screen-shot list
+GET http://localhost:7070/screenshots/
+Content-Type: application/json
+
+### Get one screen-shot
+GET http://localhost:7070/screenshots/1
+Content-Type: application/json
+
+### create one screen-shot
+POST http://localhost:7070/screenshots
+Content-Type: application/json
+
+{
+  "url":"www.google.com",
+  "url_hash":"8c3f26a90f744b9d81c9158782be75ea",
+  "is_image_created":true,
+  "image_path":"2020/02/15/11/26/8c3f26a90f744b9d81c9158782be75ea.png",
+  "created_at": 10110110
+}
+
+### update one screen-shot
+PUT http://localhost:7070/screenshots
+Content-Type: application/json
+
+{
+  "id":1,
+  "url":"www.facebook.com",
+  "url_hash":"Xc3f26a90f744b9d81c9158782be75ea",
+  "is_image_created":true,
+  "image_path":"2021/02/15/11/26/8c3f26a90f744b9d81c9158782be75ea.png",
+  "created_at": 101101122
+}
+

@@ -1,0 +1,159 @@
+version: '2.3'
+
+services: 
+    
+  zookeeper:
+    hostname: zookeeper
+    image: wurstmeister/zookeeper:3.4.6
+    expose:
+      - ${ZOOKEEPER_PORT_INTERNAL}
+    environment:
+      #set log level; log4j
+      ZOO_LOG4J_PROP: ERROR, CONSOLE
+    healthcheck:
+      test: echo stat | nc localhost ${ZOOKEEPER_PORT_INTERNAL} || exit 1
+      interval: 2s
+      timeout: 10s
+      retries: 30
+    networks:
+      - internal_1
+  
+  kafka:
+    image: wurstmeister/kafka
+    hostname: kafka
+    env_file:
+      - kafka/kafka-variables.env
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    expose:
+      - ${KAFKA_PORT_INTERNAL_1}
+      - ${KAFKA_PORT_INTERNAL_2}
+      - ${KAFKA_PORT_INTERNAL_3}
+    healthcheck:
+      test: netstat tuanp | grep ${KAFKA_PORT_INTERNAL_1} || exit 1
+      interval: 2s
+      timeout: 10s
+      retries: 30
+    networks:
+      - internal_1
+  
+  receiver:
+    build:
+      context: receiver
+    volumes:
+      - ${RECEIVER_LOGS_EXTERNAL}:${RECEIVER_LOGS_INTERNAL}
+    environment:
+      RECEIVER_PORT_INTERNAL: ${RECEIVER_PORT_INTERNAL}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_OLDEST_OFFSET: ${KAFKA_OLDEST_OFFSET}
+      RECEIVER_KAFKA_GROUP: ${RECEIVER_KAFKA_GROUP}
+      RAW_URL_KAFKA_TOPIC: ${RAW_URL_KAFKA_TOPIC}
+    ports:
+      - ${RECEIVER_PORT_EXTERNAL}:${RECEIVER_PORT_INTERNAL}
+    healthcheck:
+      test: curl -s http://localhost  :${RECEIVER_PORT_INTERNAL}/ready >/dev/null || exit 1
+      interval: 2s
+      timeout: 20s
+      retries: 30
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - internal_1
+    
+  screen-shot-service:
+    build:
+      context: screen-shot-service
+    volumes:
+    - ${STORAGE_PATH_EXTERNAL}:${STORAGE_PATH_INTERNAL}
+    - ${SCREEN_SHOT_LOGS_EXTERNAL}:${SCREEN_SHOT_LOGS_INTERNAL}
+    environment:
+      RESOLUTION: ${RESOLUTION}
+      CHROME_TIMEOUT: ${CHROME_TIMEOUT}
+      CHROME_TIME_BUDGET: ${CHROME_TIME_BUDGET}
+      SCRAPY_SPLASH_HOST: ${EXTERNAL_HOST_NETWORK}:${SCRAPY_SPLASH_PORT_EXTERNAL}
+      STORAGE_PATH: ${STORAGE_PATH_INTERNAL}
+      PARALLER_EXECUTION_COUNT: ${PARALLER_EXECUTION_COUNT}
+      RETRY_COUNT: ${RETRY_COUNT}
+      KAFKA_CLUSTER_VERSION: ${KAFKA_CLUSTER_VERSION}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_OLDEST_OFFSET: ${KAFKA_OLDEST_OFFSET}
+      RAW_URL_KAFKA_TOPIC: ${RAW_URL_KAFKA_TOPIC}
+      SCREEN_SHOT_KAFKA_GROUP: ${SCREEN_SHOT_KAFKA_GROUP}
+      RESULT_SERVICE_URL: http://${EXTERNAL_HOST_NETWORK}:${SCREEN_SHOT_API_PORT}/screenshots
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - internal_1
+      - host_machine
+
+  scrapy-splash:
+    image: scrapinghub/splash
+    hostname: scrapysplash
+    ports:
+      - ${SCRAPY_SPLASH_PORT_EXTERNAL}:${SCRAPY_SPLASH_PORT_INTERNAL}
+    expose: 
+      - ${SCRAPY_SPLASH_PORT_INTERNAL}
+    networks:
+      - internal_1
+    logging:
+      driver: none
+
+  screen-shot-db:
+    build:
+      context: screen-shot-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPORT: ${PGPORT}
+      POSTGRES_LOG_LEVEL: error
+    expose:
+      - ${PGPORT}
+    ports:
+      - ${PGOUTERPORT}:${PGPORT}
+    healthcheck:
+      test: (pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} && echo $$?) || exit 1
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks:
+      - internal_1
+
+  screen-shot-api:
+    build:
+      context: screen-shot-api
+    volumes:
+      - ${SCREEN_SHOT_API_LOGS_EXTERNAL}:${SCREEN_SHOT_API_LOGS_INTERNAL}
+    hostname: screen-shot-api
+    environment:
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}
+      DB_ENGINE: ${DB_ENGINE}
+      SCREEN_SHOT_API_ADDRESS: ${SCREEN_SHOT_API_ADDRESS}
+      SCREEN_SHOT_API_PORT: ${SCREEN_SHOT_API_PORT}
+      SCREEN_SHOT_SERVER: ${SCREEN_SHOT_SERVER}
+    ports:
+      - ${SCREEN_SHOT_API_PORT}:${SCREEN_SHOT_API_PORT}
+    expose:
+      - ${SCREEN_SHOT_API_PORT}
+    depends_on:
+      screen-shot-db:
+        condition: service_healthy
+    networks:
+      - internal_1
+
+  apache-server:
+    image: httpd
+    ports:
+      - ${APACHE_SERVER_PORT_EXTERNAL}:${APACHE_SERVER_PORT_INTERNAL}
+    volumes: 
+      - ${STORAGE_PATH_EXTERNAL}:${APACHE_SERVER_DATA_INTERNAL}
+  
+networks:
+  internal_1:
+  host_machine:
+    external: true

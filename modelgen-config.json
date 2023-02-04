@@ -1,0 +1,9 @@
+{
+    "App_Name"              :   "screen-shot-api",
+    "Target_Directory"      :   "./screen-shot-api",
+    "Module"                :   "screen-shot-api",
+    "DB_CONNECTION_STRING"  :   "host=127.0.0.1 port=5433 user=postgres password=postgres dbname=screenshotdb sslmode=disable",
+    "DB_ENGINE"             :   "postgres",
+    "API_ADDRESS"           :   "0.0.0.0",
+    "API_PORT"              :   7070
+}

@@ -1,0 +1,10 @@
+{
+    "RECEIVER_PORT_INTERNAL"   : 6060,
+
+    "KAFKA_BROKERS"             : "http://kafka:9092",
+    "KAFKA_OLDEST_OFFSET"       : true,
+    
+    "RECEIVER_KAFKA_GROUP"      : "RECEIVER_GROUP",
+
+    "RAW_URL_KAFKA_TOPIC"       : "raw_url"
+}

@@ -1,0 +1,41 @@
+##################################
+# STEP 1 build executable binary #
+##################################
+FROM golang:alpine as builder
+
+RUN apk --no-cache add make git
+
+RUN mkdir -p /app
+WORKDIR /app
+
+COPY go.mod .
+COPY go.sum .
+
+# install dependencies
+RUN go mod download
+
+# copy the content 
+COPY . .
+
+# build the binary
+RUN go build -o main
+
+##############################
+# STEP 2 build a final image #
+##############################
+FROM zenika/alpine-chrome:latest
+
+# Copy the static executable.
+COPY --from=builder /app/main /app/main
+WORKDIR /app
+VOLUME ["/data"]
+
+# Run the binary.
+# https://github.com/Zenika/alpine-chrome#-with---no-sandbox
+ENTRYPOINT ["/app/main", "-no-sandbox"]
+
+#to build 
+#>docker build -t screen-shot-service .
+
+#to run 
+#>docker run --rm -it -e RESOLUTION=1440,900 -e CHROME_TIMEOUT=90 -e CHROME_TIME_BUDGET=5 -e STORAGE_PATH=/data -v $(pwd)/data:/data screen-shot-service

@@ -1,0 +1,17 @@
+.git
+/notebooks/*
+/unused/*
+Dockerfile
+.DS_Store
+.gitignore
+README.md
+env.*
+/devops/*
+
+# To prevent storing dev/temporary container data
+*.csv
+/tmp/*
+
+#ignore config.json to use environment variables
+config.json
+data
